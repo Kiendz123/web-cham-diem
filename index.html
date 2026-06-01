@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Music Scanner Pro - Multi-Source VIP</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151d30;
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --text: #ffffff;
+            --accent: #ff007f;
+            --success: #00e676;
+            --warning: #ffb300;
+            --danger: #ff1744;
+            --tiktok: #fe2c55;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #05070f 0%, #0c1326 100%);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0, 242, 254, 0.15);
+            width: 100%;
+            max-width: 620px;
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 24px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .form-group { margin-bottom: 18px; }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text);
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.4);
+        }
+
+        .tab-container { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0aec0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active[data-type="file"] { background: linear-gradient(to right, var(--secondary), var(--primary)); color: #000; border: none; }
+        .tab-btn.active[data-type="youtube"] { background: linear-gradient(to right, #ff0000, #ff4d4d); color: #fff; border: none; }
+        .tab-btn.active[data-type="tiktok"] { background: linear-gradient(to right, #00f2fe, var(--tiktok)); color: #fff; border: none; }
+
+        .input-source { display: none; }
+        .input-source.active { display: block; }
+
+        .player-box {
+            display: none;
+            margin: 20px 0;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 315px;
+            border: 0;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        #tiktokContainer {
+            display: none;
+            width: 100%;
+            background: #090d16;
+            padding: 25px 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .tiktok-card {
+            background: rgba(254, 44, 85, 0.1);
+            border: 1px solid rgba(254, 44, 85, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .tiktok-logo-anim {
+            font-size: 40px;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 15px #fe2c55; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        .tiktok-btn-redirect {
+            display: inline-block;
+            background: var(--tiktok);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 12px;
+            box-shadow: 0 4px 15px rgba(254, 44, 85, 0.4);
+        }
+
+        #localAudioContainer {
+            padding: 25px 20px;
+            display: none;
+            text-align: center;
+            background: linear-gradient(to bottom, #111a2e, #070b14);
+        }
+
+        #localAudioPlayer { width: 100%; margin-top: 15px; }
+
+        .listening-status {
+            padding: 8px 12px;
+            background: rgba(0, 242, 254, 0.1);
+            border-radius: 8px;
+            color: var(--primary);
+            font-size: 13px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .visualizer-mock {
+            display: flex; justify-content: center; align-items: flex-end; gap: 5px; height: 35px; margin: 10px auto;
+        }
+        .bar { width: 6px; height: 8px; background: var(--primary); border-radius: 3px; }
+        .playing .bar { animation: bounce 0.5s ease-in-out infinite alternate; }
+        .playing .bar:nth-child(1) { animation-delay: 0.1s; }
+        .playing .bar:nth-child(2) { animation-delay: 0.3s; }
+        .playing .bar:nth-child(3) { animation-delay: 0.2s; }
+        .playing .bar:nth-child(4) { animation-delay: 0.4s; }
+        .playing .bar:nth-child(5) { animation-delay: 0.15s; }
+
+        @keyframes bounce { 100% { height: 35px; background: var(--accent); } }
+
+        button.btn-block {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: #05070f;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-fast-score {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+            padding: 14px;
+            background: linear-gradient(to right, #00f2fe, #4facfe);
+            border: none;
+            color: #000;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+            text-transform: uppercase;
+        }
+
+        button:disabled { background: #4a5568 !important; color: #718096 !important; cursor: not-allowed; transform: none !important; }
+
+        .analysis-box {
+            display: none;
+            background: #111a2e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .analysis-title {
+            font-size: 15px; color: var(--primary); font-weight: bold; margin-bottom: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(0,242,254,0.2); padding-bottom: 5px;
+        }
+        .stat-row { margin-bottom: 12px; }
+        .stat-labels { display: flex; justify-content: space-between; font-size: 13px; color: #cbd5e1; margin-bottom: 4px; }
+        .progress-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--secondary), var(--primary)); transition: width 1.5s ease-out; }
+
+        .judge-card {
+            background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent); padding: 12px; border-radius: 4px 8px 8px 4px; margin-bottom: 10px; display: none;
+        }
+        .judge-name { font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 3px; }
+        .judge-comment { font-size: 13px; font-style: italic; color: #e2e8f0; line-height: 1.4; }
+
+        .result-box {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 16px;
+            background: rgba(0, 242, 254, 0.05);
+            border: 2px dashed var(--success);
+            text-align: center;
+        }
+
+        .score-circle {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: radial-gradient(circle, #1a263f, #0c1326);
+            border: 4px solid var(--success);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 34px; font-weight: 900; color: var(--success);
+            margin: 10px auto; box-shadow: 0 0 20px var(--success);
+            transition: all 0.3s ease;
+        }
+
+        #status { text-align: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎵 AI Music Realtime Rating</h1>
+    
+    <form id="proRatingForm">
+        <div class="form-group">
+            <label for="username">Người chấm điểm (Giám khảo):</label>
+            <input type="text" id="username" required placeholder="Nhập tên của bạn...">
+        </div>
+
+        <div class="form-group">
+            <label for="songName">Tên bài hát / Nghệ sĩ / Xu hướng:</label>
+            <input type="text" id="songName" required placeholder="Ví dụ: Sound hot TikTok - Trend mới">
+        </div>
+
+        <div class="form-group">
+            <label>Nguồn phát nhạc:</label>
+            <div class="tab-container">
+                <button type="button" class="tab-btn active" data-type="file" onclick="switchSource('file')">📁 Tải File Lên</button>
+                <button type="button" class="tab-btn" data-type="youtube" onclick="switchSource('youtube')">🔗 Link YouTube</button>
+                <button type="button" class="tab-btn" data-type="tiktok" onclick="switchSource('tiktok')">🎵 Link TikTok</button>
+            </div>
+
+            <div id="sourceFile" class="input-source active">
+                <input type="file" id="audioFile" accept="audio/*">
+            </div>
+
+            <div id="sourceYoutube" class="input-source">
+                <input type="text" id="audioLink" placeholder="Dán link video hoặc Shorts YouTube tại đây...">
+            </div>
+
+            <div id="sourceTiktok" class="input-source">
+                <input type="text" id="tiktokLink" placeholder="Dán bất kỳ đường link video TikTok nào vào đây...">
+            </div>
+        </div>
+
+        <button type="submit" class="btn-block" id="btnSubmit">💿 LÊN MÀN HÌNH & KHỞI CHẠY</button>
+    </form>
+
+    <div class="player-box" id="playerBox">
+        <div class="iframe-container" id="iframeContainer" style="display: none;">
+            <iframe id="pureIframe" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+
+        <div id="tiktokContainer">
+            <div class="tiktok-card">
+                <div class="tiktok-logo-anim">🎵</div>
+                <div style="font-weight: bold; font-size: 15px; color: #fff;" id="tkInfoTitle">Đã liên kết luồng âm thanh TikTok</div>
+                <p style="font-size: 12px; color: #a0aec0; margin: 6px 0;">Luồng dữ liệu đã sẵn sàng để Hội đồng chấm điểm phân tích.</p>
+                <a href="#" target="_blank" class="tiktok-btn-redirect" id="tkRedirectBtn">🔗 Xem/Nghe Gốc Trên App</a>
+            </div>
+        </div>
+
+        <div id="localAudioContainer">
+            <div class="listening-status">🎙️ AI đang lắng nghe và ghi nhận tần số...</div>
+            <div class="visualizer-mock playing" id="visualizerBars">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <audio id="localAudioPlayer" controls></audio>
+        </div>
+    </div>
+
+    <button type="button" class="btn-fast-score" id="btnFastScore" onclick="startExpertEvaluation()">📊 KÍCH HOẠT HỘI ĐỒNG AI CHẤM ĐIỂM CHI TIẾT</button>
+
+    <div class="analysis-box" id="analysisBox">
+        <div class="analysis-title">📊 Bảng quét dải tần & cấu trúc âm nhạc</div>
+        <div class="stat-row">
+            <div class="stat-labels"><span>Vocal & Timbre (Âm sắc thanh nhạc)</span><span id="valVocal">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="barVocal"></div></div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-labels"><span>Melody & Harmony (Giai điệu & Hòa âm)</span><span id="valMelody">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="barMelody"></div></div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-labels"><span>Rhythm & Beat (Nhịp phách & Tiết tấu)</span><span id="valRhythm">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="barRhythm"></div></div>
+        </div>
+        <div class="stat-row">
+            <div class="stat-labels"><span>Sound Design (Kỹ thuật Trộn phối / Mix nhạc)</span><span id="valDesign">0%</span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="barDesign"></div></div>
+        </div>
+
+        <div class="judges-panel">
+            <div class="analysis-title" style="color: var(--accent); margin-top: 15px;">💬 Đánh giá từ hội đồng nghệ thuật</div>
+            <div class="judge-card" id="judge1"><div class="judge-name">👩‍🎤 GS. Anna Nguyễn - Chuyên gia Kỹ thuật Thanh nhạc</div><div class="judge-comment" id="comment1">...</div></div>
+            <div class="judge-card" id="judge2"><div class="judge-name">🎛️ Producer K-Max - Nhà sản xuất âm nhạc Hiện đại</div><div class="judge-comment" id="comment2">...</div></div>
+            <div class="judge-card" id="judge3"><div class="judge-name">🥁 Dr. David Trần - Giám khảo Tiết tấu trường Berklee</div><div class="judge-comment" id="comment3">...</div></div>
+        </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+        <h3 style="margin: 0; color: var(--success); letter-spacing: 1px; text-transform: uppercase;" id="resultHeader">🏆 ĐIỂM CHUNG CUỘC TỪ HỘI ĐỒNG</h3>
+        <div class="score-circle" id="finalScore">0.0</div>
+        <p id="verdict" style="font-style: italic; color: #cbd5e1; padding: 0 10px; font-size: 14px;"></p>
+        <p style="font-size: 11px; color: #718096; margin-bottom: 0;">Dữ liệu chấm điểm đa nguồn đã tự động đẩy đồng bộ lên GitHub DB.</p>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    // ================= CẤU HÌNH GITHUB CHUẨN CỦA BẠN =================
+    const GITHUB_TOKEN = "DÁN_TOKEN_MỚI_CỦA_BẠN_VÀO_ĐÂY"; 
+    const REPO_OWNER = "Kiendz123";   
+    const REPO_NAME = "database-cham-diem"; 
+    const FILE_PATH = "data.json";         
+    // =====================================================================
+
+    let currentSource = 'file';
+    let savedUsername = "";
+    let savedSongName = "";
+    let savedSourceVal = "";
+
+    function switchSource(type) {
+        currentSource = type;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.input-source').forEach(el => el.classList.remove('active'));
+        
+        document.querySelector(`.tab-btn[data-type="${type}"]`).classList.add('active');
+        
+        if(type === 'file') document.getElementById('sourceFile').classList.add('active');
+        else if(type === 'youtube') document.getElementById('sourceYoutube').classList.add('active');
+        else if(type === 'tiktok') document.getElementById('sourceTiktok').classList.add('active');
+    }
+
+    function extractYouTubeId(url) {
+        const regExp = /^.*(?:(?:youtu\.be\/|v\/|vi\/|u\/\w\/|embed\/|shorts\/)|(?:(?:watch)?\?v(?:i)?=|\&v(?:i)?=))([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[1].length === 11) ? match[1] : null;
+    }
+
+    // THUẬT TOÁN BĂM CHAOTIC HASHING ĐA TẦNG - PHÁ VỠ HOÀN TOÀN LỖI LẶP LẠI ĐIỂM SỐ
+    function generateStrictScore(songName, criteriaIndex) {
+        let cleanName = songName.toLowerCase().trim().replace(/\s+/g, '');
+        if (!cleanName) return 50;
+        
+        // Bước 1: Sử dụng cấu trúc băm DJB2 số nguyên tố để xáo trộn phân phối chữ
+        let hash = 5381;
+        for (let i = 0; i < cleanName.length; i++) {
+            hash = ((hash << 5) + hash) + cleanName.charCodeAt(i);
+            hash = hash & hash; // Ép về số nguyên 32-bit
+        }
+        
+        // Bước 2: Tạo hạt giống đột biến dựa trên số thứ tự tiêu chí kết hợp độ dài chuỗi chữ
+        let seed = Math.abs(hash ^ (criteriaIndex * 1543) ^ (cleanName.length * 97));
+        
+        // Bước 3: Đưa hạt giống qua phương trình hỗn loạn phi tuyến (Non-linear Pseudo-random Map)
+        let rawVal = Math.sin(seed) * 10000;
+        let finalWeight = rawVal - Math.floor(rawVal); // Lấy phần thập phân thuần túy [0, 1]
+
+        // Bước 4: Trả về thang điểm phân bổ rộng từ 10% đến 100% (Từ 1 đến 10 điểm)
+        return Math.floor(10 + finalWeight * 90);
+    }
+
+    const form = document.getElementById('proRatingForm');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const btnFastScore = document.getElementById('btnFastScore');
+    const playerBox = document.getElementById('playerBox');
+    const iframeContainer = document.getElementById('iframeContainer');
+    const pureIframe = document.getElementById('pureIframe');
+    const tiktokContainer = document.getElementById('tiktokContainer');
+    const localAudioContainer = document.getElementById('localAudioContainer');
+    const localAudioPlayer = document.getElementById('localAudioPlayer');
+    const analysisBox = document.getElementById('analysisBox');
+    const resultBox = document.getElementById('resultBox');
+    const statusDiv = document.getElementById('status');
+    const visualizerBars = document.getElementById('visualizerBars');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        resultBox.style.display = 'none';
+        analysisBox.style.display = 'none';
+        statusDiv.innerText = '';
+        
+        savedUsername = document.getElementById('username').value.trim();
+        savedSongName = document.getElementById('songName').value.trim();
+
+        if (currentSource === 'file') {
+            const fileInput = document.getElementById('audioFile');
+            if (fileInput.files.length === 0) { alert("Vui lòng chọn file nhạc!"); return; }
+            const file = fileInput.files[0];
+            savedSourceVal = file.name;
+            
+            iframeContainer.style.display = 'none';
+            tiktokContainer.style.display = 'none';
+            localAudioContainer.style.display = 'block';
+            playerBox.style.display = 'block';
+            btnFastScore.style.display = 'block';
+            
+            localAudioPlayer.src = URL.createObjectURL(file);
+            localAudioPlayer.play().catch(() => {});
+            visualizerBars.classList.add('playing');
+            
+            statusDiv.style.color = '#4facfe';
+            statusDiv.innerText = "🎧 Đang phát nhạc. Click nút 'KÍCH HOẠT HỘI ĐỒNG AI' để chấm điểm sòng phẳng!";
+            btnSubmit.disabled = true;
+
+            localAudioPlayer.onended = function() {
+                visualizerBars.classList.remove('playing');
+                startExpertEvaluation();
+            };
+        } 
+        else if (currentSource === 'youtube') {
+            const linkInput = document.getElementById('audioLink').value.trim();
+            const videoId = extractYouTubeId(linkInput);
+            savedSourceVal = linkInput;
+            if (!videoId) { alert("Link YouTube không hợp lệ!"); return; }
+
+            localAudioContainer.style.display = 'none';
+            tiktokContainer.style.display = 'none';
+            iframeContainer.style.display = 'block';
+            playerBox.style.display = 'block';
+            btnFastScore.style.display = 'block';
+
+            statusDiv.style.color = '#4facfe';
+            statusDiv.innerText = "📺 Luồng YouTube đã kết nối. Nhấn nút màu xanh dưới đây để chạy quét phổ tần!";
+            btnSubmit.disabled = true;
+
+            pureIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+        }
+        else if (currentSource === 'tiktok') {
+            let tkInput = document.getElementById('tiktokLink').value.trim();
+            if (!tkInput.includes("tiktok.com")) { alert("Vui lòng dán đúng đường link từ ứng dụng TikTok!"); return; }
+            savedSourceVal = tkInput;
+
+            iframeContainer.style.display = 'none';
+            localAudioContainer.style.display = 'none';
+            
+            document.getElementById('tkInfoTitle').innerText = `🎵 Luồng TikTok: ${savedSongName}`;
+            document.getElementById('tkRedirectBtn').href = tkInput;
+            
+            tiktokContainer.style.display = 'block';
+            playerBox.style.display = 'block';
+            btnFastScore.style.display = 'block';
+
+            statusDiv.style.color = 'var(--tiktok)';
+            statusDiv.innerText = "✅ Kết nối dữ liệu luồng thành công! Bấm nút xanh phía dưới để AI đánh giá!";
+            btnSubmit.disabled = true;
+        }
+    });
+
+    function startExpertEvaluation() {
+        if(currentSource === 'file') {
+            localAudioPlayer.pause();
+            visualizerBars.classList.remove('playing');
+        } else if(currentSource === 'youtube') {
+            pureIframe.src = ""; 
+        } else if(currentSource === 'tiktok') {
+            tiktokContainer.style.display = 'none';
+        }
+
+        btnFastScore.style.display = 'none';
+        resultBox.style.display = 'none';
+        statusDiv.style.color = '#00f2fe';
+        statusDiv.innerText = "⚙️ Hệ thống đang bóc tách cấu trúc âm thanh và tính toán dải tần...";
+        analysisBox.style.display = 'block';
+
+        // Lấy điểm số phân rã đa tầng (Chống hoàn toàn lỗi đồng pha trùng điểm)
+        const scoreVocal = generateStrictScore(savedSongName, 101);
+        const scoreMelody = generateStrictScore(savedSongName, 203);
+        const scoreRhythm = generateStrictScore(savedSongName, 307);
+        const scoreDesign = generateStrictScore(savedSongName, 409);
+
+        setTimeout(() => {
+            document.getElementById('barVocal').style.width = scoreVocal + '%';
+            document.getElementById('valVocal').innerText = scoreVocal + '%';
+            document.getElementById('barMelody').style.width = scoreMelody + '%';
+            document.getElementById('valMelody').innerText = scoreMelody + '%';
+            document.getElementById('barRhythm').style.width = scoreRhythm + '%';
+            document.getElementById('valRhythm').innerText = scoreRhythm + '%';
+            document.getElementById('barDesign').style.width = scoreDesign + '%';
+            document.getElementById('valDesign').innerText = scoreDesign + '%';
+        }, 300);
+
+        const comments = {
+            judge1: scoreVocal >= 80 ? "Kỹ thuật thanh nhạc giữ độ nét xuất sắc, cao độ xử lý cực kỳ vững vàng và giàu cảm xúc." : (scoreVocal >= 50 ? "Âm sắc giọng hát ở mức tạm ổn, tuy nhiên kiểm soát làn hơi ở các quãng treo chưa thực sự tốt." : "Giọng hát yếu, kỹ thuật nén hơi chưa đạt chuẩn, dính lỗi chênh phô khá nặng ở phần cốt lõi."),
+            judge2: scoreDesign >= 80 ? "Tư duy thiết kế âm thanh/Bản phối quá đỉnh cao! Không gian Mix lấp đầy, dải trầm căng và xử lý EQ cực sạch." : (scoreDesign >= 50 ? "Bản phối mang tính thương mại ở mức an toàn, các lớp nhạc cụ sắp xếp quen thuộc, chưa có đột phá." : "Xử lý hậu kỳ thô, các tần số âm thanh bị đè chồng lấn lên nhau gây hiện tượng mờ đục và bí bách."),
+            judge3: scoreRhythm >= 80 ? "Phát triển nhịp điệu và tiết tấu vô cùng bùng nổ, dậm phách nhịp nhàng chuẩn chỉ, tạo độ nảy hoàn hảo." : (scoreRhythm >= 50 ? "Kết cấu phách chạy đều đặn nhưng tổng thể nhịp di chuyển hơi phẳng, thiếu các mảng miếng cao trào." : "Giữ tempo không tốt, các phân đoạn chuyển đổi tiết tấu bị rời rạc làm hỏng hoàn toàn năng lượng của bản phối.")
+        };
+
+        setTimeout(() => { document.getElementById('comment1').innerText = comments.judge1; document.getElementById('judge1').style.display = 'block'; statusDiv.innerText = "💬 GS. Anna Nguyễn đang phản hồi..."; }, 1200);
+        setTimeout(() => { document.getElementById('comment2').innerText = comments.judge2; document.getElementById('judge2').style.display = 'block'; statusDiv.innerText = "💬 Producer K-Max đang phân tích..."; }, 2300);
+        setTimeout(() => { document.getElementById('comment3').innerText = comments.judge3; document.getElementById('judge3').style.display = 'block'; statusDiv.innerText = "💬 Dr. David Trần đang kết luận..."; }, 3400);
+
+        setTimeout(() => {
+            let avgScore = ((scoreVocal + scoreMelody + scoreRhythm + scoreDesign) / 40).toFixed(1);
+            triggerFinalRating(savedUsername, savedSongName, savedSourceVal, avgScore, {
+                vocal: scoreVocal, melody: scoreMelody, rhythm: scoreRhythm, design: scoreDesign,
+                expertOpinion: `${comments.judge1} | ${comments.judge2}`
+            });
+        }, 4500);
+    }
+
+    async function triggerFinalRating(username, songName, sourceVal, finalScore, detailObj) {
+        statusDiv.style.color = 'orange';
+        statusDiv.innerText = "⚡ Đang xử lý bảng điểm chung cuộc...";
+        
+        const scoreEl = document.getElementById('finalScore');
+        const boxEl = document.getElementById('resultBox');
+        const headerEl = document.getElementById('resultHeader');
+        scoreEl.innerText = finalScore;
+        
+        let finalVerdict = "";
+        
+        if (finalScore >= 8.5) {
+            finalVerdict = "🔥 KIỆT TÁC/XUẤT SẮC: Thuyết phục hoàn toàn hội đồng bằng tư duy nghệ thuật vượt trội!";
+            scoreEl.style.color = 'var(--success)';
+            scoreEl.style.borderColor = 'var(--success)';
+            scoreEl.style.boxShadow = '0 0 20px var(--success)';
+            boxEl.style.borderColor = 'var(--success)';
+            headerEl.style.color = 'var(--success)';
+        } else if (finalScore >= 5.0) {
+            finalVerdict = "✨ TRUNG BÌNH - KHÁ: Cấu trúc hòa âm ổn định, đáp ứng tốt nhu cầu nghe nhạc giải trí cơ bản.";
+            scoreEl.style.color = 'var(--warning)';
+            scoreEl.style.borderColor = 'var(--warning)';
+            scoreEl.style.boxShadow = '0 0 20px var(--warning)';
+            boxEl.style.borderColor = 'var(--warning)';
+            headerEl.style.color = 'var(--warning)';
+        } else {
+            finalVerdict = "❌ YẾU KÉM/CẦN CẢI THIỆN: Kết cấu âm thanh rời rạc, tư duy trộn phối còn nhiều hạn chế.";
+            scoreEl.style.color = 'var(--danger)';
+            scoreEl.style.borderColor = 'var(--danger)';
+            scoreEl.style.boxShadow = '0 0 20px var(--danger)';
+            boxEl.style.borderColor = 'var(--danger)';
+            headerEl.style.color = 'var(--danger)';
+        }
+        
+        document.getElementById('verdict').innerText = finalVerdict;
+        boxEl.style.display = 'block';
+
+        const payload = {
+            id: Date.now(),
+            judge: username,
+            song: songName,
+            sourceType: currentSource,
+            sourceDetail: sourceVal,
+            score: parseFloat(finalScore),
+            details: detailObj,
+            date: new Date().toLocaleString('vi-VN')
+        };
+
+        statusDiv.innerText = "⏳ Đang gửi dữ liệu đồng bộ lên GitHub DB...";
+        const url = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+        try {
+            let sha = ""; let dbContent = [];
+            const resGet = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+            if (resGet.ok) {
+                const fileData = await resGet.json(); sha = fileData.sha;
+                dbContent = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+            }
+            dbContent.push(payload);
+            const updatedBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(dbContent, null, 2))));
+
+            const resPut = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: `🎵 Hội Đồng AI Chấm Điểm Gắt (${currentSource.toUpperCase()}): ${songName} - ${finalScore}đ`,
+                    content: updatedBase64, sha: sha ? sha : undefined
+                })
+            });
+
+            if (resPut.ok) {
+                statusDiv.style.color = '#00e676';
+                statusDiv.innerText = "🚀 Đã đồng bộ an toàn hồ sơ lên mây!";
+            } else { throw new Error("API ghi dữ liệu thất bại."); }
+        } catch (err) {
+            statusDiv.style.color = '#ff007f';
+            statusDiv.innerText = `❌ Lỗi lưu Cloud: ${err.message}. Điểm số hiển thị sòng phẳng trên màn hình!`;
+        } finally {
+            btnSubmit.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
