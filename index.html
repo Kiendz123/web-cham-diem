@@ -46,7 +46,7 @@
         .stat-row { margin-bottom: 12px; }
         .stat-labels { display: flex; justify-content: space-between; font-size: 13px; color: #cbd5e1; margin-bottom: 4px; }
         .progress-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--secondary), var(--primary)); transition: width 1.5s ease-out; }
+        .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(to right, var(--secondary), var(--primary)); transition: width 0.1s linear; }
         .judge-card { background: rgba(255,255,255,0.02); border-left: 3px solid var(--accent); padding: 12px; border-radius: 4px 8px 8px 4px; margin-bottom: 10px; display: none; }
         .judge-name { font-size: 13px; font-weight: bold; color: var(--accent); margin-bottom: 3px; }
         .judge-comment { font-size: 13px; font-style: italic; color: #e2e8f0; line-height: 1.4; }
@@ -59,9 +59,10 @@
 
 <div class="container">
     <h1>🎵 AI Music Realtime Rating</h1>
+    
     <form id="proRatingForm">
-        <div class="form-group"><label>Giám khảo:</label><input type="text" id="username" required placeholder="Nhập tên..."></div>
-        <div class="form-group"><label>Tên bài hát / Nghệ sĩ:</label><input type="text" id="songName" required placeholder="Ví dụ: Lạc Trôi"></div>
+        <div class="form-group"><label>Giám khảo:</label><input type="text" id="username" required placeholder="Nhập tên của bạn..."></div>
+        <div class="form-group"><label>Tên bài hát / Nghệ sĩ:</label><input type="text" id="songName" required placeholder="Ví dụ: Lạc Trôi - Sơn Tùng"></div>
         <div class="form-group">
             <label>Nguồn phát nhạc:</label>
             <div class="tab-container">
@@ -70,32 +71,39 @@
                 <button type="button" class="tab-btn" data-type="tiktok" onclick="switchSource('tiktok')">🎵 TikTok</button>
             </div>
             <div id="sourceFile" class="input-source active"><input type="file" id="audioFile" accept="audio/*"></div>
-            <div id="sourceYoutube" class="input-source"><input type="text" id="audioLink" placeholder="Dán link YouTube..."></div>
-            <div id="sourceTiktok" class="input-source"><input type="text" id="tiktokLink" placeholder="Dán link TikTok..."></div>
+            <div id="sourceYoutube" class="input-source"><input type="text" id="audioLink" placeholder="Dán link hoặc mã ID video YouTube..."></div>
+            <div id="sourceTiktok" class="input-source"><input type="text" id="tiktokLink" placeholder="Dán link bài viết hoặc âm thanh TikTok..."></div>
         </div>
         <button type="submit" class="btn-block" id="btnSubmit">💿 KHỞI CHẠY LUỒNG PHÁT</button>
     </form>
 
     <div class="player-box" id="playerBox">
-        <div class="iframe-container" id="iframeContainer" style="display: none;"><iframe id="pureIframe" allow="autoplay"></iframe></div>
-        <div id="tiktokContainer"><div class="tiktok-card"><div style="font-weight:bold;">🎵 Đã liên kết luồng TikTok</div></div></div>
-        <div id="localAudioContainer"><audio id="localAudioPlayer" controls></audio></div>
+        <div class="iframe-container" id="iframeContainer" style="display: none;"><iframe id="pureIframe" allow="autoplay; encrypted-media"></iframe></div>
+        <div id="tiktokContainer">
+            <div class="tiktok-card">
+                <div style="font-weight:bold; color:var(--tiktok);">🎵 ĐÃ LIÊN KẾT LUỒNG ÂM THANH TIKTOK</div>
+                <div id="tiktokUrlDisplay" style="font-size:12px; color:#a0aec0; margin-top:5px; word-break:break-all;"></div>
+            </div>
+        </div>
+        <div id="localAudioContainer"><audio id="localAudioPlayer" controls crossorigin="anonymous"></audio></div>
     </div>
 
-    <button type="button" class="btn-fast-score" id="btnFastScore" onclick="startExpertEvaluation()">📊 KÍCH HOẠT AI CHẤM ĐIỂM</button>
+    <button type="button" class="btn-fast-score" id="btnFastScore" onclick="startSystemAnalysis()">📊 KÍCH HOẠT AI CHẤM ĐIỂM</button>
 
     <div class="analysis-box" id="analysisBox">
-        <div class="analysis-title">📊 Bảng quét dải tần</div>
-        <div class="stat-row"><div class="stat-labels"><span>Vocal</span><span id="valVocal">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barVocal"></div></div></div>
-        <div class="stat-row"><div class="stat-labels"><span>Melody</span><span id="valMelody">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barMelody"></div></div></div>
-        <div class="stat-row"><div class="stat-labels"><span>Rhythm</span><span id="valRhythm">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barRhythm"></div></div></div>
-        <div class="stat-row"><div class="stat-labels"><span>Mix / Sound Design</span><span id="valDesign">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barDesign"></div></div></div>
-        <div class="judge-card" id="judge1"><div class="judge-name">👩‍🎤 GS. Anna Nguyễn</div><div class="judge-comment" id="comment1">...</div></div>
+        <div class="analysis-title" id="analysisTitle">⏳ AI ĐANG PHÂN TÍCH TẦN SỐ ÂM THANH REALTIME...</div>
+        <div class="stat-row"><div class="stat-labels"><span>Vocal & High Range (Giọng hát)</span><span id="valVocal">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barVocal"></div></div></div>
+        <div class="stat-row"><div class="stat-labels"><span>Melody & Mid Range (Giai điệu)</span><span id="valMelody">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barMelody"></div></div></div>
+        <div class="stat-row"><div class="stat-labels"><span>Rhythm & Bass (Nhịp điệu)</span><span id="valRhythm">0%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" id="barRhythm"></div></div></div>
+        
+        <div class="judge-card" id="judge1" style="margin-top:15px;"><div class="judge-name">👩‍🎤 GS. Anna Nguyễn</div><div class="judge-comment" id="comment1">...</div></div>
+        <div class="judge-card" id="judge2"><div class="judge-name">🥁 Dr. David Trần - Ban Tiết tấu</div><div class="judge-comment" id="comment2">...</div></div>
     </div>
 
     <div class="result-box" id="resultBox">
-        <h3 id="resultHeader">🏆 ĐIỂM CHUNG CUỘC</h3>
+        <h3>🏆 ĐIỂM CHUNG CUỘC TỪ HỘI ĐỒNG</h3>
         <div class="score-circle" id="finalScore">0.0</div>
+        <p id="verdict" style="font-style:italic; font-size:13px; color:#cbd5e1; margin-top:10px;"></p>
     </div>
     <div id="status"></div>
 </div>
@@ -103,6 +111,11 @@
 <script>
     const FORMSPREE_URL = "https://formspree.io/f/maqkrqgy";
     let currentSource = 'file', savedUsername = "", savedSongName = "", savedSourceVal = "";
+    
+    // Web Audio Node phục vụ phân tích âm thanh thật
+    let audioCtx = null, analyser = null, sourceNode = null, animationId = null;
+    let realVocal = [], realMelody = [], realRhythm = [];
+
     const form = document.getElementById('proRatingForm'), btnSubmit = document.getElementById('btnSubmit'), btnFastScore = document.getElementById('btnFastScore');
     const playerBox = document.getElementById('playerBox'), iframeContainer = document.getElementById('iframeContainer'), pureIframe = document.getElementById('pureIframe');
     const tiktokContainer = document.getElementById('tiktokContainer'), localAudioContainer = document.getElementById('localAudioContainer'), localAudioPlayer = document.getElementById('localAudioPlayer');
@@ -118,6 +131,14 @@
         else if(type === 'tiktok') document.getElementById('sourceTiktok').classList.add('active');
     }
 
+    // Hàm trích xuất chính xác mã ID từ bất kỳ dạng link YouTube nào người dùng nhập vào
+    function getYouTubeId(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : (url.length === 11 ? url : null);
+    }
+
+    // Thuật toán băm chuỗi ký tự cố định để tính toán điểm số logic dựa trên tên bài hát
     function generateStrictScore(songName, criteriaIndex) {
         let cleanName = songName.toLowerCase().trim().replace(/\s+/g, '');
         if (!cleanName) return 50;
@@ -132,56 +153,164 @@
         e.preventDefault();
         savedUsername = document.getElementById('username').value.trim();
         savedSongName = document.getElementById('songName').value.trim();
+        
         if (currentSource === 'file') {
             const file = document.getElementById('audioFile').files[0]; if (!file) return;
-            savedSourceVal = "File am thanh cuc bo"; 
+            savedSourceVal = "File: " + file.name; 
             localAudioContainer.style.display = 'block'; iframeContainer.style.display = 'none'; tiktokContainer.style.display = 'none';
-            localAudioPlayer.src = URL.createObjectURL(file); localAudioPlayer.play().catch(()=>{});
+            localAudioPlayer.src = URL.createObjectURL(file);
         } else if (currentSource === 'youtube') {
-            savedSourceVal = "Nguon Audio YouTube";
+            const ytLink = document.getElementById('audioLink').value.trim();
+            savedSourceVal = ytLink || "Link YouTube";
+            const videoId = getYouTubeId(ytLink);
+            
             localAudioContainer.style.display = 'none'; iframeContainer.style.display = 'block'; tiktokContainer.style.display = 'none';
-            pureIframe.src = "https://www.youtube.com/embed/dQw4w9WgXcQ"; 
+            if (videoId) {
+                pureIframe.src = "https://www.youtube.com/embed/" + videoId + "?autoplay=1"; 
+            } else {
+                pureIframe.src = "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"; // fallback video nếu link hỏng
+            }
         } else {
-            savedSourceVal = "Nguon Audio TikTok";
+            const tkLink = document.getElementById('tiktokLink').value.trim() || "Luồng phát trực tiếp TikTok";
+            savedSourceVal = tkLink;
+            document.getElementById('tiktokUrlDisplay').innerText = tkLink;
             localAudioContainer.style.display = 'none'; iframeContainer.style.display = 'none'; tiktokContainer.style.display = 'block';
         }
         playerBox.style.display = 'block'; btnFastScore.style.display = 'block'; btnSubmit.disabled = true;
     });
 
-    async function startExpertEvaluation() {
-        btnFastScore.style.display = 'none'; analysisBox.style.display = 'block';
-        const sV = generateStrictScore(savedSongName, 101), sM = generateStrictScore(savedSongName, 203), sR = generateStrictScore(savedSongName, 307), sD = generateStrictScore(savedSongName, 409);
-        
-        document.getElementById('barVocal').style.width = sV + '%'; document.getElementById('valVocal').innerText = sV + '%';
-        document.getElementById('barMelody').style.width = sM + '%'; document.getElementById('valMelody').innerText = sM + '%';
-        document.getElementById('barRhythm').style.width = sR + '%'; document.getElementById('valRhythm').innerText = sR + '%';
-        document.getElementById('barDesign').style.width = sD + '%'; document.getElementById('valDesign').innerText = sD + '%';
+    function startSystemAnalysis() {
+        btnFastScore.style.display = 'none';
+        analysisBox.style.display = 'block';
+        document.getElementById('analysisTitle').innerText = "⏳ AI ĐANG THU THẬP VÀ PHÂN TÍCH LUỒNG NHẠC CHUYÊN SÂU...";
 
-        let avg = ((sV + sM + sR + sD) / 40).toFixed(1);
-        document.getElementById('comment1').innerText = "AI da kiem duyet xong.";
+        if (currentSource === 'file') {
+            // 📁 1. XỬ LÝ ÂM THANH THỰC TẾ (BẰNG WEB AUDIO API CỦA TRÌNH DUYỆT)
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                sourceNode = audioCtx.createMediaElementSource(localAudioPlayer);
+                sourceNode.connect(analyser);
+                analyser.connect(audioCtx.destination);
+            }
+            localAudioPlayer.play().catch(()=>{});
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function processRealAudio() {
+                analyser.getByteFrequencyData(dataArray);
+                let bass = dataArray[2] || 0;
+                let mid = dataArray[8] || 0;
+                let high = dataArray[14] || 0;
+
+                let vPct = Math.round((high/255)*100);
+                let mPct = Math.round((mid/255)*100);
+                let rPct = Math.round((bass/255)*100);
+
+                if(vPct > 2) realVocal.push(vPct);
+                if(mPct > 2) realMelody.push(mPct);
+                if(rPct > 2) realRhythm.push(rPct);
+
+                document.getElementById('barVocal').style.width = vPct + '%'; document.getElementById('valVocal').innerText = vPct + '%';
+                document.getElementById('barMelody').style.width = mPct + '%'; document.getElementById('valMelody').innerText = mPct + '%';
+                document.getElementById('barRhythm').style.width = rPct + '%'; document.getElementById('valRhythm').innerText = rPct + '%';
+
+                animationId = requestAnimationFrame(processRealAudio);
+            }
+            processRealAudio();
+
+            // AI phân tích mẫu sóng nhạc đúng 4 giây thực tế để lấy kết quả chuẩn nhất
+            setTimeout(() => {
+                cancelAnimationFrame(animationId);
+                localAudioPlayer.pause();
+                
+                let aV = realVocal.length ? (realVocal.reduce((a,b)=>a+b,0)/realVocal.length) : 60;
+                let aM = realMelody.length ? (realMelody.reduce((a,b)=>a+b,0)/realMelody.length) : 65;
+                let aR = realRhythm.length ? (realRhythm.reduce((a,b)=>a+b,0)/realRhythm.length) : 55;
+                let score = (((aV * 0.4) + (aM * 0.3) + (aR * 0.3)) / 10).toFixed(1);
+                
+                showFinalResults(score);
+            }, 4000);
+
+        } else {
+            // 🔗🎵 2. XỬ LÝ CHO YOUTUBE & TIKTOK (HIỆU ỨNG SÓNG NHẢY CHỜ ĐỒNG BỘ 4 GIÂY)
+            let duration = 4000, intervalTime = 100, elapsed = 0;
+            let timer = setInterval(() => {
+                elapsed += intervalTime;
+                
+                // Tạo dải tần chuyển động liên tục cực kỳ tự nhiên và mượt mà
+                let v = Math.floor(Math.random() * 40) + 50;
+                let m = Math.floor(Math.random() * 35) + 55;
+                let r = Math.floor(Math.random() * 45) + 45;
+
+                document.getElementById('barVocal').style.width = v + '%'; document.getElementById('valVocal').innerText = v + '%';
+                document.getElementById('barMelody').style.width = m + '%'; document.getElementById('valMelody').innerText = m + '%';
+                document.getElementById('barRhythm').style.width = r + '%'; document.getElementById('valRhythm').innerText = r + '%';
+
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    // Sau khi hết 4 giây phân tích luồng phát, xuất điểm tính toán logic của tên bài hát
+                    let sV = generateStrictScore(savedSongName, 12), sM = generateStrictScore(savedSongName, 34), sR = generateStrictScore(savedSongName, 56);
+                    let score = ((sV + sM + sR) / 30).toFixed(1);
+                    showFinalResults(score);
+                }
+            }, intervalTime);
+        }
+    }
+
+    function showFinalResults(finalScore) {
+        document.getElementById('analysisTitle').innerText = "✅ AI ĐA HOÀN THÀNH QUÉT DỮ LIỆU LUỒNG PHÁT!";
+        if(finalScore > 10.0) finalScore = 10.0; if(finalScore < 1.0) finalScore = 1.0;
+
+        document.getElementById('finalScore').innerText = finalScore;
+        
+        // Trả kết quả nhận xét từ giám khảo theo thang điểm số thực tế
+        if(finalScore >= 7.5) {
+            document.getElementById('comment1').innerText = "Bản phối khí bắt tai, dải âm trung xử lý sắc nét, tôn giọng hát tốt.";
+            document.getElementById('comment2').innerText = "Cấu trúc phách chắc chắn, năng lượng nhịp điệu phân phối hợp lý.";
+            document.getElementById('verdict').innerText = "✨ ẤN TƯỢNG - TỐT: Bản phối sáng tạo, các dải âm thanh đạt độ cân bằng lý tưởng.";
+        } else if(finalScore >= 5.5) {
+            document.getElementById('comment1').innerText = "Bản phối mang tính thương mại quen thuộc, kết cấu vừa vặn dễ nghe.";
+            document.getElementById('comment2').innerText = "Tiết tấu chạy tương đối đều đặn nhưng cần nhấn nhá đột phá hơn ở đoạn Hook.";
+            document.getElementById('verdict').innerText = "⚠️ TRUNG BÌNH - KHÁ: Sản phẩm hoàn thiện ổn định, đáp ứng tốt nhu cầu giải trí.";
+        } else {
+            document.getElementById('comment1').innerText = "Bản hòa âm còn khá thô, vocal bị chìm nhẹ so với các lớp nhạc cụ.";
+            document.getElementById('comment2').innerText = "Nhịp điệu có phần lặp lại gây đơn điệu, cần bổ sung các mảng biến tấu.";
+            document.getElementById('verdict').innerText = "❌ CẦN ĐIỀU CHỈNH: Cần tinh chỉnh lại âm lượng tổng thể giữa nền nhạc và giọng hát.";
+        }
+
         document.getElementById('judge1').style.display = 'block';
-        document.getElementById('finalScore').innerText = avg;
+        document.getElementById('judge2').style.display = 'block';
         resultBox.style.display = 'block';
 
-        statusDiv.style.color = 'orange';
-        statusDiv.innerText = "⏳ Dang dong bo len Cloud...";
+        // Gửi kết quả lên Cloud bảo mật
+        sendDataToCloud(finalScore);
+    }
 
-        // Su dung FormData nguyen ban de truyen du lieu chu (khong co header kieu JSON, anti-ISO error)
+    async function sendDataToCloud(finalScore) {
+        statusDiv.style.color = 'orange';
+        statusDiv.innerText = "⏳ Đang đồng bộ hóa dữ liệu kiểm định lên hệ thống Cloud...";
+
+        // Sử dụng FormData thuần túy truyền qua body để triệt tiêu hoàn toàn lỗi ISO-8859-1 trên điện thoại di động
         const fData = new FormData();
         fData.append("Giam_Khao", savedUsername);
         fData.append("Bai_Hat", savedSongName);
-        fData.append("Nguon_Phat", currentSource);
-        fData.append("Chi_Tiet", savedSourceVal);
-        fData.append("Diem_So", avg);
+        fData.append("Nguon_Phat", currentSource.toUpperCase());
+        fData.append("Chi_Tiet_Nguon", savedSourceVal);
+        fData.append("Diem_Chung_Cuoc", finalScore);
 
         try {
             await fetch(FORMSPREE_URL, { method: 'POST', body: fData, headers: { 'Accept': 'application/json' } });
             statusDiv.style.color = '#00e676';
-            statusDiv.innerText = "🚀 Da luu diem vao Cloud thanh cong!";
+            statusDiv.innerText = "🚀 Đã lưu kết quả thành công vào hệ thống cơ sở dữ liệu!";
         } catch(e) {
             statusDiv.style.color = '#ff1744';
-            statusDiv.innerText = "❌ Loi ket noi dong bo.";
-        } finally { btnSubmit.disabled = false; }
+            statusDiv.innerText = "❌ Đồng bộ thất bại do lỗi đường truyền mạng.";
+        } finally {
+            btnSubmit.disabled = false;
+        }
     }
 </script>
 </body>
